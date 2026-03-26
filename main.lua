@@ -1,3 +1,4 @@
+if game.PlaceId == 88933961678687 then
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({
     Name = "BobHub | [⚡] Hyper Speed Runner", 
@@ -234,6 +235,9 @@ local function InitFly()
         end
     end)
 end
+
+end
+
 
 InitFly()
 OrionLib:Init()
