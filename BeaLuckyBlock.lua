@@ -28,9 +28,11 @@ local player = game.Players.LocalPlayer
 _G.TargetSpeed = 16
 _G.TargetJumpPower = 50
 _G.autoSpecialEnabled = false
+_G.autoCollectEnabled = false
 
 -- Variabel kontrol agar tidak double loop (Anti-Crash)
 local SpecialLoop = false
+local collectLoop = false
 
 -- [[ FUNCTIONS ]] --
 function autoSpecial()
@@ -44,7 +46,7 @@ function autoSpecial()
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
         if hrp then
-            -- TAHAP 1: Teleport Awal & Remote Pertama (Sesuai script manualmu)
+ 
             hrp.CFrame = CFrame.new(651, 53, -2123)
             print("Teleport Awal Berhasil!")
             
@@ -90,10 +92,56 @@ function autoSpecial()
     SpecialLoop = false
 end
 
+-- [[ FUNCTION AUTO COLLECT - BRING METHOD ]] --
+function autoCollect()
+    if collectLoop then return end
+    collectLoop = true
+    
+    while _G.autoCollectEnabled do
+        local char = game.Players.LocalPlayer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        
+        if root then
+            -- Scan semua objek di dalam folder Plots
+            for _, item in pairs(workspace.Plots:GetDescendants()) do
+                -- Mencari part yang ada di dalam "CollectVFX"
+                if item.Parent and item.Parent.Name == "CollectVFX" then
+                    
+                    local target = nil
+                    if item:IsA("BasePart") then
+                        target = item
+                    elseif item:IsA("Model") then
+                        target = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart", true)
+                    end
+
+                    if target then
+                        pcall(function()
+                            -- METHOD 1: Tarik koin ke badan (Paling Ampuh)
+                            target.CFrame = root.CFrame
+                            
+                            -- METHOD 2: Tekan Tombol Otomatis (Jika ada ProximityPrompt)
+                            local prompt = target:FindFirstChildOfClass("ProximityPrompt") or target.Parent:FindFirstChildOfClass("ProximityPrompt")
+                            if prompt then
+                                fireproximityprompt(prompt)
+                            end
+
+                            -- METHOD 3: Sentuhan Fisik
+                            firetouchinterest(root, target, 0)
+                            task.wait()
+                            firetouchinterest(root, target, 1)
+                        end)
+                    end
+                end
+            end
+        end
+        task.wait(0.5) -- Scan setiap 0.5 detik agar koin baru langsung terambil
+    end
+    collectLoop = false
+end
+
 function SpyHelper()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Brand/Turtle-Spy/main/source.lua", true))()
 end
-
 
 
 -- [[ TABS ]] --
@@ -110,6 +158,16 @@ AutoFarm:AddToggle({
         _G.autoSpecialEnabled = Value
         if Value then
             task.spawn(autoSpecial)
+        end
+    end    
+})
+AutoFarm:AddToggle({
+    Name = "Auto Collect Need Fixed(BUG)",
+    Default = false,
+    Callback = function(Value)
+        _G.autoCollectEnabled = Value
+        if Value then
+            task.spawn(autoCollect)
         end
     end    
 })
